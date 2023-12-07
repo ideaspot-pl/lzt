@@ -33,7 +33,7 @@ class MeetingRepository extends ServiceEntityRepository
             ->andWhere('m.start <= :now')
             ->andWhere('m.stop >= :extendedNow')
             ->setParameter('now', $now)
-            ->setParameter('extendedNow', $now)
+            ->setParameter('extendedNow', $extendedNow)
             ->orderBy('m.start', 'ASC')
             ->setMaxResults(1)
         ;
