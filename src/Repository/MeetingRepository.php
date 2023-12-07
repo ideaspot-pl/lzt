@@ -21,28 +21,35 @@ class MeetingRepository extends ServiceEntityRepository
         parent::__construct($registry, Meeting::class);
     }
 
-//    /**
-//     * @return Meeting[] Returns an array of Meeting objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('m')
-//            ->andWhere('m.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('m.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
 
-//    public function findOneBySomeField($value): ?Meeting
-//    {
-//        return $this->createQueryBuilder('m')
-//            ->andWhere('m.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    public function findInRoom(string $room, \DateTimeInterface $now): ?Meeting
+    {
+        $extendedNow = new \DateTime($now->format('Y-m-d H:i:s'));
+        $extendedNow->modify('-15 minutes'); // @todo add to config // -15min so it's same as end+15min
+
+        $qb = $this->createQueryBuilder('m')
+            ->andWhere('m.room = :room')
+            ->setParameter('room', $room)
+            ->andWhere('m.start <= :now')
+            ->andWhere('m.stop >= :extendedNow')
+            ->setParameter('now', $now)
+            ->setParameter('extendedNow', $now)
+            ->orderBy('m.start', 'ASC')
+            ->setMaxResults(1)
+        ;
+
+        $query = $qb->getQuery();
+        $meeting = $query->getOneOrNullResult();
+
+        return $meeting;
+    }
+
+    public function save(Meeting $meeting, bool $flush = false): void
+    {
+        $this->getEntityManager()->persist($meeting);
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
+    }
 }
